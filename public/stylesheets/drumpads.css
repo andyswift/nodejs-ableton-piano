@@ -1,0 +1,50 @@
+/* =Keyboard formed like drum pads
+-------------------------------------------------------------- */
+
+#keyboard {
+    width:400px;
+    clear:both;
+    overflow:hidden;
+    height:200px;
+    margin-top:30px;
+    position: relative;
+    cursor: pointer;
+    box-shadow:0 2px 3px rgba(0,0,0,0.3);
+}
+
+.key {
+    width:25%;
+    height:25%;
+    float:left;
+    background:white;
+    border: 1px dotted black
+}
+
+.key:active,.key.active {
+    background:brown;
+}
+
+.sharp {
+
+}
+
+/*
+.key.Cs {
+    left:9.69696969697%;
+}
+
+.key.Ds {
+    left:24.242424242424%;
+}
+
+.key.Fs {
+    left:52.333333333333%;
+}
+
+.key.Gs {
+    left:66.878787878788%;
+}
+
+.key.As {
+    left:81.030303030303%;
+} */

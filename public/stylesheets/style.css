@@ -250,7 +250,7 @@ a,a:visited {
 }
 
 #controller {
-    display: none;
+    display: inline;
 }
 
 #container ul {
@@ -314,58 +314,7 @@ small {
     display: block;
 }
 
-/* =Keyboard
--------------------------------------------------------------- */
-
-#keyboard {
-    width:100%;
-    clear:both;
-    overflow:hidden;
-    height:324px;
-    margin-top:30px;
-    position: relative;
-    cursor: pointer;
-    box-shadow:0 2px 3px rgba(0,0,0,0.3);
-}
-
-.key {
-    width:14.090909090909%;
-    height:100%;
+#links {
     float:left;
-    background:white;
-    margin-right:0.151515151515%;
-    box-shadow:0 2px 3px rgba(0,0,0,0.3);
-}
-
-.key:active,.key.active {
-    background:brown;
-}
-
-.sharp {
-    background:black;
-    position: absolute;
-    height:70%;
-    width:9.090909090909%;
-    border:1px solid black;
-    border-top:none;
-}
-
-.key.Cs {
-    left:9.69696969697%;
-}
-
-.key.Ds {
-    left:24.242424242424%;
-}
-
-.key.Fs {
-    left:52.333333333333%;
-}
-
-.key.Gs {
-    left:66.878787878788%;
-}
-
-.key.As {
-    left:81.030303030303%;
+    clear: both
 }

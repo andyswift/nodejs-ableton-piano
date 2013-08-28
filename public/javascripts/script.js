@@ -1,25 +1,25 @@
-(function($){
+(function ($) {
     // connect to socket.io
-    var socket = io.connect('http://localhost'); // change to appropiate for network access
+    var socket = io.connect('http://' + window.location.host); // change to appropiate for network access
 
     ////////////
 
-    var KeyBoard = function(el) {
+    var KeyBoard = function (el) {
         this._el = el;
-        this.octave = 0;
+        this.octave = -5;
         this.notes = {
-            C:  60,
+            C: 60,
             Cs: 61,
-            D:  62,
+            D: 62,
             Ds: 63,
-            E:  64,
-            F:  65,
+            E: 64,
+            F: 65,
             Fs: 66,
-            G:  67,
+            G: 67,
             Gs: 68,
-            A:  69,
+            A: 69,
             As: 70,
-            B:  71
+            B: 71
         };
         this.keys = {
             65: 'C',
@@ -41,103 +41,107 @@
         };
         this.init();
     };
-    
-    KeyBoard.prototype = function(){
-        var init = function(){
-            createKeys.call(this);
-            bindEvents.call(this);
-        },
-        createKeys = function(){
-            var self = this;
-            $.each(this.notes, function(index,item){
-                createKey.call(self,index,item);
-            });
-        },
-        createKey = function(note,message){
-            var key = $('<div/>').attr('rel',message).addClass(note).addClass('key').appendTo(this._el);
-            if ( note.indexOf('s') > 0 ) {
-                key.addClass('sharp');
-            }
-        },
-        bindEvents = function(){
-            var self = this,
-                note, key, code, pressed = {};
 
-            // Click
-            this._el.find('.key').on('mousedown touchstart',function(e){
-                e.preventDefault();
-                note = $(this).attr('rel');
-                noteDown.call(self,note);
-            }).on('mouseup touchend',function(e){
-                e.preventDefault();
-                note = $(this).attr('rel');
-                noteUp.call(self,note);
-            });
-
-            // Keyboard
-            $(window).on('keydown',function(e){
-                if ( self.keys[e.keyCode] ) {
-                    e.preventDefault();
-                    note = self.notes[self.keys[e.keyCode]];
-                    key = getKey.call(self,note).addClass('active');
-                    if ( pressed[note] !== true ) {
-                        pressed[note] = true;
-                        noteDown.call(self,note);
-                    }
-                } else if ( self.controlKeys[e.keyCode] ) {
-                    code = self.controlKeys[e.keyCode];
-                    if ( code === 'octaveUp' ) {
-                        octaveUp.call(self);
-                    } else if ( code === 'octaveDown') {
-                        octaveDown.call(self);
-                    }
+    KeyBoard.prototype = function () {
+        var init = function () {
+                createKeys.call(this);
+                bindEvents.call(this);
+            },
+            createKeys = function () {
+                var self = this;
+                $.each(this.notes, function (index, item) {
+                    createKey.call(self, index, item);
+                });
+            },
+            createKey = function (note, message) {
+                var key = $('<div/>').attr('rel', message).addClass(note).addClass('key').appendTo(this._el);
+                if (note.indexOf('s') > 0) {
+                    key.addClass('sharp');
                 }
-            }).on('keyup',function(e){
-                if ( self.keys[e.keyCode] ) {
+            },
+            bindEvents = function () {
+                var self = this,
+                    note, key, code, pressed = {};
+
+                // Click
+                this._el.find('.key').on('mousedown touchstart',function (e) {
                     e.preventDefault();
-                    note = self.notes[self.keys[e.keyCode]];
-                    key = getKey.call(self,note).removeClass('active');
-                    pressed[note] = false;
-                    noteUp.call(self,note);
+                    note = $(this).attr('rel');
+                    noteDown.call(self, note);
+                }).on('mouseup touchend', function (e) {
+                        e.preventDefault();
+                        note = $(this).attr('rel');
+                        noteUp.call(self, note);
+                    });
+
+                // Keyboard
+                $(window).on('keydown',function (e) {
+                    if (self.keys[e.keyCode]) {
+                        e.preventDefault();
+                        note = self.notes[self.keys[e.keyCode]];
+                        key = getKey.call(self, note).addClass('active');
+                        if (pressed[note] !== true) {
+                            pressed[note] = true;
+                            noteDown.call(self, note);
+                        }
+                    } else if (self.controlKeys[e.keyCode]) {
+                        code = self.controlKeys[e.keyCode];
+                        if (code === 'octaveUp') {
+                            octaveUp.call(self);
+                        } else if (code === 'octaveDown') {
+                            octaveDown.call(self);
+                        }
+                    }
+                }).on('keyup', function (e) {
+                        if (self.keys[e.keyCode]) {
+                            e.preventDefault();
+                            note = self.notes[self.keys[e.keyCode]];
+                            key = getKey.call(self, note).removeClass('active');
+                            pressed[note] = false;
+                            noteUp.call(self, note);
+                        }
+                    });
+
+                // Remote Click
+                socket.on('playeddown', function (data) {
+                    getKey.call(self, data.message).addClass('active');
+                });
+
+                socket.on('playedup', function (data) {
+                    getKey.call(self, data.message).removeClass('active');
+                });
+            },
+            getKey = function (message) {
+                return this._el.find('div[rel="' + message + '"]');
+            },
+            noteDown = function (note) {
+                var octavedNote = getNoteInOctave.call(this, note);
+                socket.emit('notedown', {message: octavedNote, channel: channel});
+            },
+            noteUp = function (note) {
+                var octavedNote = getNoteInOctave.call(this, note);
+                socket.emit('noteup', {message: octavedNote, channel: channel});
+            },
+            getNoteInOctave = function (note) {
+                var octave = this.octave;
+                if (octave === 0) {
+                    return note;
+                } else {
+                    return ~~note + ( 12 * octave );
                 }
-            });
-
-            // Remote Click
-            socket.on('playeddown', function(data){
-                getKey.call(self,data.message).addClass('active');
-            });
-
-            socket.on('playedup', function(data){
-                getKey.call(self,data.message).removeClass('active');
-            });
-        },
-        getKey = function(message) {
-            return this._el.find('div[rel="'+message+'"]');
-        },
-        noteDown = function(note){
-            var octavedNote = getNoteInOctave.call(this,note);
-            socket.emit('notedown',{message: octavedNote});
-        },
-        noteUp = function(note){
-            var octavedNote = getNoteInOctave.call(this,note);
-            socket.emit('noteup',{message: octavedNote});
-        },
-        getNoteInOctave = function(note){
-            var octave = this.octave;
-            if ( octave === 0 ) {
-                return note;
-            } else {
-                return ~~note + ( 12 * octave );
-            }
-        },
-        octaveUp = function() {
-            if ( this.octave === 4 ) { return; }
-            this.octave += 1;
-        },
-        octaveDown = function() {
-            if ( this.octave === -4 ) { return; }
-            this.octave -= 1;
-        };
+            },
+            octaveUp = function () {
+                if (this.octave === 4) {
+                    return;
+                }
+                this.octave += 1;
+            },
+            octaveDown = function () {
+                if (this.octave === -4) {
+                    return;
+                }
+                this.octave -= 1;
+            };
         return {
             init: init
         };
@@ -149,9 +153,25 @@
 
 
     // send message on click
-    $('#controller a').on('click', function(e){
+    $('#controller a').on('click', function (e) {
         e.preventDefault();
-        socket.emit('controller',{ message: $(this).data('message') });
+        socket.emit('controller', { message: $(this).data('message') });
+
+        function playWord(vel) {
+            socket.emit('notedown', {message: vel, channel: 1});
+            socket.emit('noteup', {message: vel, channel: 1});
+        }
+
+        var i = 1
+        var timer = setTimeout(function() {
+
+            timer = setTimeout(arguments.callee, 400)
+
+            playWord(i);
+            if (i++==20) {
+                clearTimeout(timer)
+            }
+        }, 0)
     });
 
 })(jQuery);
